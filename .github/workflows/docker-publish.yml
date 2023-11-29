@@ -1,0 +1,76 @@
+name: Publish Docker Images
+
+# Right now, do a build every time there's a push to the main branch.
+on:
+  push:
+    branches: [ "main" ]
+
+
+# We need to provide a registry domain, and an image name
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+
+jobs:
+  build:
+    # TODO: If we end up building for multiple architectures, we may have to
+    # change up the OS matrix.
+    runs-on: ubuntu-latest
+
+    # We need to read from the repo to do a checkout
+    # We need to write to the container repository
+    # NOTE: Don't use this for push requests!
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # Although the docker/build-push-action Action handles the actual build
+      # and push, that action brings in an older version of the BuildKit
+      # software.  This action brings in a newer version.
+      - name: Configure Docker Buildx
+        uses: docker/setup-buildx-action@v2.5.0
+
+      # Extract metadata 
+      # This has an ID assigned to it, since the results will be used later.
+      - name: Extract Docker Metadata
+        id: meta
+        uses: docker/metadata-action@v4.4.0
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      # For logging into the GitHub registry, we can use our GitHub token.
+      - name: Log in to registry
+        uses: docker/login-action@v2.1.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # After all the setup, build and push happens here.
+      - name: Build and Push
+        uses: docker/build-push-action@v4.0.0
+        with:
+          # The Dockerfile etc. is in the root of the repo, which is checked
+          # out to the cwd, so that's where the Action should look.
+          context: .
+
+          # After a build, push the image to the registry.
+          # NOTE: Don't use this for push requests!
+          push: true
+
+          # Labels and Tags come from the Metadata extraction.
+          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.meta.outputs.tags }}
+
+          # Include information in the image to show where it came from.
+          provenance: true
+          sbom: true
+
+          # Tell the Action that it can use a GitHub Actions-provided cache.
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
