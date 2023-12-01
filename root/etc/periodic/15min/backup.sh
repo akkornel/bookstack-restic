@@ -25,3 +25,9 @@ mysqldump --host=${MYSQL_HOST} --password=$(cat $DB_PASS_FILE) --databases mysql
 mysqldump --host=${MYSQL_HOST} --password=$(cat $DB_PASS_FILE) --databases ${DB_DATABASE} > /bookstack/backups/bookstack.sql
 
 # PART 2: Run a Restic backup of the Bookstack directory
+restic backup \
+	/bookstack/BOOKSTACK_APP_KEY.txt \
+	/bookstack/backups/mysql.sql /bookstack/backups/bookstack.sql \
+	/bookstack/keys/ /bookstack/letsencrypt/ \
+	/bookstack/www/files /bookstack/www/images /bookstack/www/themes \
+	/bookstack/www/uploads
