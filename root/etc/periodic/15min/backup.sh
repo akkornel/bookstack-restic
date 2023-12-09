@@ -39,6 +39,10 @@ if [ ${RETAIN_YEARLY:-x} = 'x' ]; then
 	echo 'RETAIN_YEARLY environment variable is missing!'
 	exit 1
 fi
+if [ ${REPACK_MAX_UNUSED:-x} = 'x' ]; then
+	echo 'REPACK_MAX_UNUSED environment variable is missing!'
+	exit 1
+fi
 
 # PART 1: Dump the database into the Bookstack directory
 mysqldump --host=${MYSQL_HOST} --password=$(cat $DB_PASS_FILE) --databases mysql > /bookstack/backups/mysql.sql
@@ -56,3 +60,7 @@ restic backup \
 restic forget --keep-hourly ${RETAIN_HOURLY} --keep-daily ${RETAIN_DAILY} \
 	--keep-weekly ${RETAIN_WEEKLY} --keep-monthly ${RETAIN_MONTHLY} \
 	--keep-yearly ${RETAIN_YEARLY}
+
+# PART 4: Prune pack files
+echo "Repacking with max-unused of ${REPACK_MAX_UNUSED}"
+restic prune --max-unused ${REPACK_MAX_UNUSED}
