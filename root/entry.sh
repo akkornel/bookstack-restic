@@ -9,7 +9,7 @@ function usage {
 	echo
 	echo "The following commands are available:"
 	echo "- cron: Run the cron daemon (will not exit)"
-	echo "- mysql: Run the MariaDB client"
+	echo "- mysql: Run the MariaDB client against the DB host, as root"
 	echo "- restic: Run the Restic client"
 }
 
@@ -24,7 +24,7 @@ case $1 in
 		exec crond -f
 		;;
 	mysql)
-		exec mariadb "${@:2}"
+		exec mariadb --password=$(cat ${DB_PASS_FILE}) "${@:2}"
 		;;
 	restic)
 		exec restic "${@:2}"
