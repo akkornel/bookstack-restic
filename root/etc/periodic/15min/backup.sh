@@ -19,6 +19,26 @@ if [ ${DB_DATABASE:-x} = 'x' ]; then
 	echo 'DB_DATABASE environment variable is missing!'
 	exit 1
 fi
+if [ ${RETAIN_HOURLY:-x} = 'x' ]; then
+	echo 'RETAIN_HOURLY environment variable is missing!'
+	exit 1
+fi
+if [ ${RETAIN_DAILY:-x} = 'x' ]; then
+	echo 'RETAIN_DAILY environment variable is missing!'
+	exit 1
+fi
+if [ ${RETAIN_WEEKLY:-x} = 'x' ]; then
+	echo 'RETAIN_WEEKLY environment variable is missing!'
+	exit 1
+fi
+if [ ${RETAIN_MONTHLY:-x} = 'x' ]; then
+	echo 'RETAIN_MONTHLY environment variable is missing!'
+	exit 1
+fi
+if [ ${RETAIN_YEARLY:-x} = 'x' ]; then
+	echo 'RETAIN_YEARLY environment variable is missing!'
+	exit 1
+fi
 
 # PART 1: Dump the database into the Bookstack directory
 mysqldump --host=${MYSQL_HOST} --password=$(cat $DB_PASS_FILE) --databases mysql > /bookstack/backups/mysql.sql
@@ -31,3 +51,8 @@ restic backup \
 	/bookstack/keys/ /bookstack/letsencrypt/ \
 	/bookstack/www/files /bookstack/www/images /bookstack/www/themes \
 	/bookstack/www/uploads
+
+# PART 3: Clean up snapshots
+restic forget --keep-hourly ${RETAIN_HOURLY} --keep-daily ${RETAIN_DAILY} \
+	--keep-weekly ${RETAIN_WEEKLY} --keep-monthly ${RETAIN_MONTHLY} \
+	--keep-yearly ${RETAIN_YEARLY}
