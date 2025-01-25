@@ -1,7 +1,7 @@
 # vim: sw=2 ts=2 et
 
 # Start with the Restic container
-FROM ghcr.io/restic/restic:0.16.2 as restic
+FROM ghcr.io/restic/restic:0.17.3 as restic
 
 # Our actual container will be based off of Alpine
 FROM alpine:latest
